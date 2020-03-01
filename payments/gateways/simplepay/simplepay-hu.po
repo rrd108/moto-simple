@@ -1,0 +1,62 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-03-01 15:51+0100\n"
+"PO-Revision-Date: 2020-03-01 15:52+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: hu\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.3\n"
+"X-Domain: gateways\n"
+"X-Poedit-KeywordsList: __\n"
+"X-Poedit-Basepath: ..\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SearchPath-0: simplepay-gateway.php\n"
+
+#: simplepay-gateway.php:80 simplepay-gateway.php:85
+msgid "Simplepay"
+msgstr ""
+
+#: simplepay-gateway.php:86
+msgid "Pay via Simplepay"
+msgstr "Fizess Simplepay-jel"
+
+#: simplepay-gateway.php:187
+msgid "Redirecting to SimplePay"
+msgstr "Átirányítás a SimplePay-re"
+
+#: simplepay-gateway.php:189
+msgid "Pay by credit card"
+msgstr "Fizess bankkártyával"
+
+#: simplepay-gateway.php:190
+msgid "Booking amount"
+msgstr "Foglalási összeg"
+
+#: simplepay-gateway.php:195
+msgid "Go to SimplePay"
+msgstr "Irány a SimplePay"
+
+#: simplepay-gateway.php:211
+msgid "Simplepay HUF Merchant Id"
+msgstr ""
+
+#: simplepay-gateway.php:216
+msgid "Simplepay HUF Secret Key"
+msgstr ""
+
+#: simplepay-gateway.php:289
+msgid "SimplePay transaction ID is"
+msgstr "A SimplePay tranzakció azonosító"
+
+#: simplepay-gateway.php:291
+msgid "Your booking ID is"
+msgstr "Foglalási azonosító"
+
+#: simplepay-gateway.php:293
+msgid "Transaction date is"
+msgstr "Tranzakció dátuma"
