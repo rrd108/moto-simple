@@ -19,7 +19,11 @@ class SimplepayGateway extends Gateway {
 	 * @var string
 	 */
 
-	public function __construct(){
+	public function __construct() {
+		if (get_user_locale() == 'hu') {
+			load_textdomain('moto-gateway-simplepay', dirname(__FILE__) . '/simplepay/simplepay-hu.mo');
+		}
+
 		add_filter( 'mphb_gateway_has_instructions', array( $this, 'hideInstructions' ), 10, 2 );
 		add_filter('mphb_sc_checkout_payment_mode_success_message', [$this, 'simplePaymentForm']);
 		add_action('wp_loaded', [$this, 'responseListener']);
@@ -27,12 +31,12 @@ class SimplepayGateway extends Gateway {
 
 		$this->setupSupportedCurrencies();
 
+		add_shortcode('simplepay_error', [$this, 'simplepay_error_shortcode']);
+
 		parent::__construct();
 
-//		$this->setupResponseListener();
-
 		/*
-		TODO
+		TODO handle ipn
 		if (!empty($_REQUEST['wc-api']) && $_REQUEST['wc-api'] == 'wc_gateway_simplepayhu') {
             $this->ipn_handler();
 		}
@@ -60,6 +64,7 @@ class SimplepayGateway extends Gateway {
 		}
 
 		if(isset($_REQUEST['timeout'])) {
+			$this->timeout_handler();
 		}
 
 		// TODO handle IPN
@@ -74,13 +79,13 @@ class SimplepayGateway extends Gateway {
 
 	protected function setupProperties(){
 		parent::setupProperties();
-		$this->adminTitle	 = __( 'Simplepay', 'motopress-hotel-booking' );
+		$this->adminTitle	 = __( 'Simplepay', 'moto-gateway-simplepay' );
 	}
 
 	protected function initDefaultOptions(){
 		$defaults = array(
-			'title'						 => __( 'Simplepay', 'motopress-hotel-booking' ),
-			'description'				 => __( 'Pay via Simplepay', 'motopress-hotel-booking' ),
+			'title'						 => __( 'Simplepay', 'moto-gateway-simplepay' ),
+			'description'				 => __( 'Pay via Simplepay', 'moto-gateway-simplepay' ),
 			'enabled'					 => false,
 			'is_sandbox'				 => false,
 			'disable_ipn_verification'	 => false
@@ -176,7 +181,6 @@ class SimplepayGateway extends Gateway {
 
 		//$url = preg_replace('#^https?://#', '', plugin_dir_url(__FILE__));
 		$url = $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-		//http://localhost/~rrd/sk/booking-confirmation/?step=booking
 		$simple->setField('BACK_REF', $url . '&back_ref=1');
 		$simple->setField('TIMEOUT_URL', $url . '&timeout=1');
 		$simple->setField('LANGUAGE', $booking->getLanguage());
@@ -206,12 +210,12 @@ class SimplepayGateway extends Gateway {
 		$groupFields = array(
 			Fields\FieldFactory::create( "mphb_payment_gateway_{$this->id}_huf_merchant_id", array(
 				'type'		 => 'text',
-				'label'		 => __( 'Simplepay HUF Merchant Id', 'motopress-hotel-booking' ),
+				'label'		 => __( 'Simplepay HUF Merchant Id', 'moto-gateway-simplepay' ),
 				'default'	 => $this->getDefaultOption( 'huf_merchant_id' )
 			) ),
 			Fields\FieldFactory::create( "mphb_payment_gateway_{$this->id}_huf_secret_key", array(
 				'type'		 => 'text',
-				'label'		 => __( 'Simplepay HUF Secret Key', 'motopress-hotel-booking' ),
+				'label'		 => __( 'Simplepay HUF Secret Key', 'moto-gateway-simplepay' ),
 				'default'	 => $this->getDefaultOption( 'huf_secret_key' )
 			) ),
 		);
@@ -243,95 +247,94 @@ class SimplepayGateway extends Gateway {
 
 		$backref->order_ref = $_REQUEST['order_ref'];
 
-		// TODO replace wc-simplepayhu to the new string
+		$payment = new \MPHB\Entities\Payment([
+			'id' => get_post_meta($_REQUEST['order_ref'], '_mphb_wait_payment')[0],
+			'bookingId' => $_REQUEST['order_ref'],
+			'amount' => json_decode(get_post_meta($_REQUEST['order_ref'])['_mphb_booking_price_breakdown'][0])->deposit,
+			'currency' => $orderCurrency,
+			'gatewayId' => 'simplepay',
+			'gatewayMode' => $this->isSandbox ? 'sandbox' : 'live',	// TODO test this
+		]);
 
-		$message = '';
 		$backStatus = $backref->backStatusArray;
+
 		//some error before the user even redirected to SimplePay
 		if (!empty($_REQUEST['err'])) {
-//			$backStatus = $backref->backStatusArray;
 			$backref->logFunc("BackRef", $_REQUEST, $backref->order_ref);
-			$message .= '<div class="woocommerce-error">' . __('An error occured before the payment', 'wc-simplepayhu')
-				. ' ' . '<strong>' . $_REQUEST['err'] . '</strong>'
-				. '</div>';
-			// TODO $order->update_status('wc-simplepay-error');
-
+			MPHB()->paymentManager()->failPayment( $payment );
+			$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled';
 			// TODO add reorder link
 		}
 
 		//card authorization failed
 		if (empty($_REQUEST['err']) && !$backref->checkResponse()) {
-//			$backStatus = $backref->backStatusArray;
-			$message .= '<div class="woocommerce-error">'
-				. __('Unsuccessful transaction', 'wc-simplepayhu')
-				.  '<br><strong>' . __('An error occured during the payment', 'wc-simplepayhu') . '</strong>'
-				. '</div>';
-			// TODO $order->update_status('wc-simplepay-error');
+			$backref->logFunc("BackRef", $_REQUEST, $backref->order_ref);
+			MPHB()->paymentManager()->failPayment( $payment );
+			$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled&payrefno=' . $backStatus['PAYREFNO'] . '&refnoext=' . $backStatus['REFNOEXT'] . '&backrefdate=' . $backStatus['BACKREF_DATE'];
 		}
 
 		//success on card authorization
 		if (empty($_REQUEST['err']) && $backref->checkResponse()) {
-//			$backStatus = $backref->backStatusArray;
-			if ($backStatus['PAYMETHOD'] == 'Visa/MasterCard/Eurocard') {
-				$message .= '<div class="woocommerce-message">'
-					. __('Card authorized at SimplePay', 'wc-simplepayhu')
-					. ' ' . __('Current status is', 'wc-simplepayhu') . ' ';
-				if ($backStatus['ORDER_STATUS'] == 'IN_PROGRESS') {
-					$message .= '<strong>' . __('In progress', 'wc-simplepayhu') . '</strong>';
-				}
-				if ($backStatus['ORDER_STATUS' ] == 'PAYMENT_AUTHORIZED') {
-					$message .= '<strong>' . __('Payment authorized', 'wc-simplepayhu') . '</strong>';
-				}
-				if ($backStatus['ORDER_STATUS'] == 'COMPLETE') {
-					$message .= '<strong>' . __('Payment complete', 'wc-simplepayhu') . '</strong>';
-				}
-				$message .= '</div>';
-				$message .= __('Successful transaction', 'wc-simplepayhu');
-			}
-
-			// TODO the payment not loading completely so we have no amount and currency but we need them
-
-			$payment = new \MPHB\Entities\Payment([
-				'id' => get_post_meta($_REQUEST['order_ref'], '_mphb_wait_payment')[0],
-				'bookingId' => $_REQUEST['order_ref'],
-				'amount' => json_decode(get_post_meta($_REQUEST['order_ref'])['_mphb_booking_price_breakdown'][0])->deposit,
-				'currency' => $orderCurrency,
-				'gatewayId' => 'simplepay',
-				'gatewayMode' => $this->isSandbox ? 'sandbox' : 'live',	// TODO test this
-				'transactionId' => $backStatus['PAYREFNO']
-			]);
+			$payment->setTransactionId($backStatus['PAYREFNO']);
 			MPHB()->paymentManager()->completePayment( $payment );
+			$url = MPHB()->settings()->pages()->getReservationReceivedPageUrl($payment) . '&mphb_confirmation_status=confirmed&payrefno=' . $backStatus['PAYREFNO'] . '&refnoext=' . $backStatus['REFNOEXT'] . '&backrefdate=' . $backStatus['BACKREF_DATE'];
 		}
 
 		$backref->errorLogger();
-
-		/*$message .= '<br>';
-		$message .= __('SimplePay transaction ID is', 'wc-simplepayhu')
-			. ' <strong>' . $backStatus['PAYREFNO'] . '</strong><br>';
-		$message .= __('Your order ID is', 'wc-simplepayhu')
-			. ' <strong>' . $backStatus['REFNOEXT'] . '</strong><br>';
-		$message .= __('Transaction date is', 'wc-simplepayhu')
-			. ' <strong>' . $backStatus['BACKREF_DATE'] . '</strong>';
-		$message .= '</p>';*/
-
-		// echo $message;	// TODO
-
-		// TODO add $backStatus values to the url so we can use them in simpleResponse
-		$url = MPHB()->settings()->pages()->getReservationReceivedPageUrl($payment) . '&mphb_confirmation_status=confirmed';
 		wp_redirect($url);
 		exit;
 	}
 
-	public function simpleResponse()
+	protected function timeout_handler()
 	{
-		// TODO
-//http://localhost/~rrd/sk/booking-confirmation/payment-success/?payment_id=1426&payment_key=payment_1426_5e5983243c9db5.87687388&mphb_payment_status=mphb-p-completed&mphb_confirmation_status=confirmed
-		echo __('SimplePay transaction ID is', 'wc-simplepayhu')
-			. ' <strong>' . $backStatus['PAYREFNO'] . '</strong><br>';
-		echo __('Your order ID is', 'wc-simplepayhu')
-			. ' <strong>' . $backStatus['REFNOEXT'] . '</strong><br>';
-		echo __('Transaction date is', 'wc-simplepayhu')
-			. ' <strong>' . $backStatus['BACKREF_DATE'] . '</strong>';
+		$orderCurrency = $_REQUEST['order_currency'];
+		$config = $this->setSimplePayConfig($orderCurrency);
+		$timeout = new \SimpleLiveUpdate($config, $orderCurrency);
+		$timeout->order_ref = $_REQUEST['order_ref'];
+		if ($_REQUEST['redirect'] == 1) {
+			$log['TRANSACTION'] = 'ABORT';
+		} else {
+			$log['TRANSACTION'] = 'TIMEOUT';
+		}
+
+		$payment = new \MPHB\Entities\Payment([
+			'id' => get_post_meta($_REQUEST['order_ref'], '_mphb_wait_payment')[0],
+			'bookingId' => $_REQUEST['order_ref'],
+			'amount' => json_decode(get_post_meta($_REQUEST['order_ref'])['_mphb_booking_price_breakdown'][0])->deposit,
+			'currency' => $orderCurrency,
+			'gatewayId' => 'simplepay',
+			'gatewayMode' => $this->isSandbox ? 'sandbox' : 'live',	// TODO test this
+		]);
+
+		$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled&payrefno=' . $timeout['PAYREFNO'] . '&refnoext=' . $timeout['REFNOEXT'] . '&backrefdate=' . $timeout['BACKREF_DATE'];
+		$log['ORDER_ID'] = (isset($_REQUEST['order_ref'])) ? $_REQUEST['order_ref'] : 'N/A';
+		$log['CURRENCY'] = (isset($_REQUEST['order_currency'])) ? $_REQUEST['order_currency'] : 'N/A';
+		$log['REDIRECT'] = (isset($_REQUEST['redirect'])) ? $_REQUEST['redirect'] : '0';
+		$timeout->logFunc("Timeout", $log, $log['ORDER_ID']);
+		$timeout->errorLogger();
+
+		wp_redirect($url);
+		exit;
+	}
+
+	public function simpleResponse($returnMode = true)
+	{
+		$output = __('SimplePay transaction ID is', 'moto-gateway-simplepay')
+			. ' <strong>' . $_GET['payrefno'] . '</strong><br>';
+		$output .= __('Your booking ID is', 'moto-gateway-simplepay')
+			. ' <strong>' . $_GET['refnoext'] . '</strong><br>';
+		$output .= __('Transaction date is', 'moto-gateway-simplepay')
+			. ' <strong>' . $_GET['backrefdate'] . '</strong>';
+		if (!$returnMode) echo $output;
+		if ($returnMode) return $output;
+	}
+
+	public function simplepay_error_shortcode()
+	{
+		$output = '<p>';
+		$output .= $this->simpleResponse(true);
+		$output .= '</p>';
+		return $output;
 	}
 
 }
