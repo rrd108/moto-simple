@@ -20,7 +20,7 @@ class SimplepayGateway extends Gateway {
 	 */
 
 	public function __construct() {
-		if (get_user_locale() == 'hu') {
+		if (get_user_locale() == 'hu_HU') {
 			load_textdomain('moto-gateway-simplepay', dirname(__FILE__) . '/simplepay/simplepay-hu.mo');
 		}
 
