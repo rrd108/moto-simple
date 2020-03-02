@@ -6,12 +6,6 @@ use \MPHB\Admin\Fields;
 
 class SimplepayGateway extends Gateway {
 
-	/**
-	 *
-	 * @var Simplepay\IpnListener
-	 */
-	protected $ipnListener;
-
 	protected $simplePaymentFrom;
 
 	/**
@@ -33,14 +27,11 @@ class SimplepayGateway extends Gateway {
 
 		add_shortcode('simplepay_error', [$this, 'simplepay_error_shortcode']);
 
-		parent::__construct();
-
-		/*
-		TODO handle ipn
-		if (!empty($_REQUEST['wc-api']) && $_REQUEST['wc-api'] == 'wc_gateway_simplepayhu') {
-            $this->ipn_handler();
+		if (!empty($_REQUEST['wc-api']) && $_REQUEST['wc-api'] == 'moto_gateway_simplepay') {
+			$this->ipn_handler();
 		}
-		*/
+
+		parent::__construct();
 	}
 
     /**
@@ -66,16 +57,7 @@ class SimplepayGateway extends Gateway {
 		if(isset($_REQUEST['timeout'])) {
 			$this->timeout_handler();
 		}
-
-		// TODO handle IPN
-
-		/* 		$ipnListnerArgs		 = array(
-			'gatewayId'				 => $this->getId(),
-			'sandbox'				 => $this->isSandbox,
-			'verificationDisabled'	 => (bool) $this->getOption( 'disable_ipn_verification' ),
-		);
-		$this->ipnListener	 = new Simplepay\IpnListener( $ipnListnerArgs );
- */	}
+	}
 
 	protected function setupProperties(){
 		parent::setupProperties();
@@ -270,7 +252,7 @@ class SimplepayGateway extends Gateway {
 		if (empty($_REQUEST['err']) && !$backref->checkResponse()) {
 			$backref->logFunc("BackRef", $_REQUEST, $backref->order_ref);
 			MPHB()->paymentManager()->failPayment( $payment );
-			$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled&payrefno=' . $backStatus['PAYREFNO'] . '&refnoext=' . $backStatus['REFNOEXT'] . '&backrefdate=' . $backStatus['BACKREF_DATE'];
+			$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled&type=failed&payrefno=' . $backStatus['PAYREFNO'] . '&refnoext=' . $backStatus['REFNOEXT'] . '&backrefdate=' . $backStatus['BACKREF_DATE'];
 		}
 
 		//success on card authorization
@@ -291,10 +273,13 @@ class SimplepayGateway extends Gateway {
 		$config = $this->setSimplePayConfig($orderCurrency);
 		$timeout = new \SimpleLiveUpdate($config, $orderCurrency);
 		$timeout->order_ref = $_REQUEST['order_ref'];
+
 		if ($_REQUEST['redirect'] == 1) {
 			$log['TRANSACTION'] = 'ABORT';
+			$tpye = 'abort';
 		} else {
 			$log['TRANSACTION'] = 'TIMEOUT';
+			$tpye = 'timeout';
 		}
 
 		$payment = new \MPHB\Entities\Payment([
@@ -306,12 +291,11 @@ class SimplepayGateway extends Gateway {
 			'gatewayMode' => $this->isSandbox ? 'sandbox' : 'live',	// TODO test this
 		]);
 
-		$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled&payrefno=' . $timeout['PAYREFNO'] . '&refnoext=' . $timeout['REFNOEXT'] . '&backrefdate=' . $timeout['BACKREF_DATE'];
+		$url = MPHB()->settings()->pages()->getPaymentFailedPageUrl( $payment ) . '&mphb_confirmation_status=cancelled&type=' . $tpye;
 		$log['ORDER_ID'] = (isset($_REQUEST['order_ref'])) ? $_REQUEST['order_ref'] : 'N/A';
 		$log['CURRENCY'] = (isset($_REQUEST['order_currency'])) ? $_REQUEST['order_currency'] : 'N/A';
 		$log['REDIRECT'] = (isset($_REQUEST['redirect'])) ? $_REQUEST['redirect'] : '0';
 		$timeout->logFunc("Timeout", $log, $log['ORDER_ID']);
-		$timeout->errorLogger();
 
 		wp_redirect($url);
 		exit;
@@ -331,10 +315,40 @@ class SimplepayGateway extends Gateway {
 
 	public function simplepay_error_shortcode()
 	{
-		$output = '<p>';
+		if (isset($_REQUEST['type'])) {
+			$output = '<p>';
+			if ($_REQUEST['type'] == 'abort') {
+				$output .= __('You have cancelled the payment', 'moto-gateway-simplepay');
+			}
+			if ($_REQUEST['type'] == 'timeout') {
+				$output .= __('You exceeded the maximum time available to start the transaction.', 'moto-gateway-simplepay');
+			}
+			if ($_REQUEST['type'] == 'failed') {
+				$output .= __('Please check if the details provided during the transaction are correct.', 'moto-gateway-simplepay');
+				$output .= __('If all of the details were provided correctly, please contact the bank that issued your card in order to investigate the cause of the rejection.', 'moto-gateway-simplepay');
+			}
+			$output .= '</p>';
+		}
+		$output .= '<p>';
 		$output .= $this->simpleResponse(true);
 		$output .= '</p>';
 		return $output;
 	}
 
+	public function ipn_handler()
+	{
+		$orderCurrency = $_REQUEST['CURRENCY'];
+		$config = $this->setSimplePayConfig($orderCurrency);
+
+		$ipn = new \SimpleIpn($config, $orderCurrency);
+		if ($ipn->validateReceived()) {
+			$ipn->confirmReceived();
+		}
+		$ipn->errorLogger();
+
+		// flush output and exit as otherwise we run into a die statement at class-wc-api.php
+		// and epayment will not in response output
+		wp_ob_end_flush_all();
+		exit;
+	}
 }
