@@ -94,8 +94,8 @@ class SimplepayGateway extends Gateway {
 		require_once plugin_dir_path(__FILE__) . '../../libraries/simplepay-sdk/SimplePayment.class.php';
 
 		$currency = 'HUF';
-		$config[$currency . '_MERCHANT'] = $this->getOption( strtolower($currency) . '_merchant_id' );
-		$config[$currency . '_SECRET_KEY'] = $this->getOption( strtolower($currency) . '_secret_key' );
+		$config[$currency . '_MERCHANT'] = get_option( 'mphb_payment_gateway_simplepay_' . strtolower($currency) . '_merchant_id' );
+		$config[$currency . '_SECRET_KEY'] = get_option( 'mphb_payment_gateway_simplepay_' . strtolower($currency) . '_secret_key' );
 		$config['LOG_PATH'] = plugin_dir_path(__FILE__) . '/simplepay/logs';
 
 		$config['SANDBOX'] = $this->isSandbox;
