@@ -8,7 +8,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2020-03-01 15:51+0100\n"
+"POT-Creation-Date: 2020-03-04 20:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: Poedit 2.3\n"
 "X-Domain: gateways\n"
@@ -16,46 +16,62 @@ msgstr ""
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SearchPath-0: simplepay-gateway.php\n"
 
-#: simplepay-gateway.php:80 simplepay-gateway.php:85
+#: simplepay-gateway.php:66 simplepay-gateway.php:71
 msgid "Simplepay"
 msgstr ""
 
-#: simplepay-gateway.php:86
+#: simplepay-gateway.php:72
 msgid "Pay via Simplepay"
 msgstr ""
 
-#: simplepay-gateway.php:187
+#: simplepay-gateway.php:173
 msgid "Redirecting to SimplePay"
 msgstr ""
 
-#: simplepay-gateway.php:189
+#: simplepay-gateway.php:175
 msgid "Pay by credit card"
 msgstr ""
 
-#: simplepay-gateway.php:190
+#: simplepay-gateway.php:176
 msgid "Booking amount"
 msgstr ""
 
-#: simplepay-gateway.php:195
+#: simplepay-gateway.php:181
 msgid "Go to SimplePay"
 msgstr ""
 
-#: simplepay-gateway.php:211
+#: simplepay-gateway.php:197
 msgid "Simplepay HUF Merchant Id"
 msgstr ""
 
-#: simplepay-gateway.php:216
+#: simplepay-gateway.php:202
 msgid "Simplepay HUF Secret Key"
 msgstr ""
 
-#: simplepay-gateway.php:289
+#: simplepay-gateway.php:308
 msgid "SimplePay transaction ID is"
 msgstr ""
 
-#: simplepay-gateway.php:291
+#: simplepay-gateway.php:310
 msgid "Your booking ID is"
 msgstr ""
 
-#: simplepay-gateway.php:293
+#: simplepay-gateway.php:312
 msgid "Transaction date is"
+msgstr ""
+
+#: simplepay-gateway.php:323
+msgid "You have cancelled the payment"
+msgstr ""
+
+#: simplepay-gateway.php:326
+msgid "You exceeded the maximum time available to start the transaction."
+msgstr ""
+
+#: simplepay-gateway.php:329
+msgid "Please check if the details provided during the transaction are correct."
+msgstr ""
+
+#: simplepay-gateway.php:330
+msgid "If all of the details were provided correctly, please contact the bank that issued your card in order to investigate the cause of the rejection."
 msgstr ""

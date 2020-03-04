@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-03-01 15:51+0100\n"
-"PO-Revision-Date: 2020-03-01 15:52+0100\n"
+"POT-Creation-Date: 2020-03-04 20:19+0100\n"
+"PO-Revision-Date: 2020-03-04 20:22+0100\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: hu\n"
@@ -17,46 +17,67 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-SearchPath-0: simplepay-gateway.php\n"
 
-#: simplepay-gateway.php:80 simplepay-gateway.php:85
+#: simplepay-gateway.php:66 simplepay-gateway.php:71
 msgid "Simplepay"
 msgstr ""
 
-#: simplepay-gateway.php:86
+#: simplepay-gateway.php:72
 msgid "Pay via Simplepay"
 msgstr "Fizess Simplepay-jel"
 
-#: simplepay-gateway.php:187
+#: simplepay-gateway.php:173
 msgid "Redirecting to SimplePay"
 msgstr "Átirányítás a SimplePay-re"
 
-#: simplepay-gateway.php:189
+#: simplepay-gateway.php:175
 msgid "Pay by credit card"
 msgstr "Fizess bankkártyával"
 
-#: simplepay-gateway.php:190
+#: simplepay-gateway.php:176
 msgid "Booking amount"
 msgstr "Foglalási összeg"
 
-#: simplepay-gateway.php:195
+#: simplepay-gateway.php:181
 msgid "Go to SimplePay"
 msgstr "Irány a SimplePay"
 
-#: simplepay-gateway.php:211
+#: simplepay-gateway.php:197
 msgid "Simplepay HUF Merchant Id"
 msgstr ""
 
-#: simplepay-gateway.php:216
+#: simplepay-gateway.php:202
 msgid "Simplepay HUF Secret Key"
 msgstr ""
 
-#: simplepay-gateway.php:289
+#: simplepay-gateway.php:308
 msgid "SimplePay transaction ID is"
 msgstr "A SimplePay tranzakció azonosító"
 
-#: simplepay-gateway.php:291
+#: simplepay-gateway.php:310
 msgid "Your booking ID is"
 msgstr "Foglalási azonosító"
 
-#: simplepay-gateway.php:293
+#: simplepay-gateway.php:312
 msgid "Transaction date is"
 msgstr "Tranzakció dátuma"
+
+#: simplepay-gateway.php:323
+msgid "You have cancelled the payment"
+msgstr "Megszakítottad a fizetést"
+
+#: simplepay-gateway.php:326
+msgid "You exceeded the maximum time available to start the transaction."
+msgstr "A tranzakció maximális időtartama lejárt."
+
+#: simplepay-gateway.php:329
+msgid ""
+"Please check if the details provided during the transaction are correct."
+msgstr "Kélek ellenőrizd, hogy a tranzakció során megadott adatok helyesek-e."
+
+#: simplepay-gateway.php:330
+msgid ""
+"If all of the details were provided correctly, please contact the bank that "
+"issued your card in order to investigate the cause of the rejection."
+msgstr ""
+"Ha az azonosító adatokat helyesen adtad meg, akkor keresd meg a "
+"kártyakibocsátó bankodat, hogy megtudd a kártyád miért került elutasításra."
