@@ -18,6 +18,8 @@ class SimplepayGateway extends Gateway {
 			load_textdomain('moto-gateway-simplepay', dirname(__FILE__) . '/simplepay/simplepay-hu.mo');
 		}
 
+		$this->isSandbox = get_option('mphb_payment_gateway_simplepay_is_sandbox');
+
 		add_filter( 'mphb_gateway_has_instructions', array( $this, 'hideInstructions' ), 10, 2 );
 		add_filter('mphb_sc_checkout_payment_mode_success_message', [$this, 'simplePaymentForm']);
 		add_action('wp_loaded', [$this, 'responseListener']);
