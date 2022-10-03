@@ -1,5 +1,7 @@
 # motopress-hotel-booking simplepay
 
+This steps are not needed since 2022-10. Just install the wc-simple plugin.
+
 If you update the hotel booking plugin there is a good chance that you have to do this again manually use `wp-content/plugins/motopress-hotel-booking/includes` as base directory
 
 1. Copy all files from this repo 
